@@ -100,6 +100,5 @@ public class BdxIoStream implements ApplicationRunner {
         return pair.getLeft() + ":::" + pair.getRight().substring(7, 10);
     }
 
-
 }
 
