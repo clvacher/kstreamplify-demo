@@ -1,8 +1,5 @@
 package com.bdxio.stream;
 
-
-import com.bdxio.stream.model.ProcessResult;
-import com.bdxio.stream.processor.ErrorProcessor;
 import lombok.Getter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kafka.common.serialization.Serdes;
@@ -85,40 +82,24 @@ public class BdxIoStream implements ApplicationRunner {
                         .withKeySerde(Serdes.String()).withValueSerde(Serdes.String())
         );
 
-        var stream = streamDataIn.join(
+        streamDataIn.join(
                         tableRefData,
                         (leftKey, leftValue) -> leftKey,
                         Pair::of
                 )
                 .mapValues(pair ->
                         transformValue(pair)
-                );
+                )
 
-        Map<String, KStream<String, ProcessResult>> branches = stream
-                 .split(Named.as("Branch-"))
-                 .branch((key, processResult) -> processResult.getException() != null, Branched.as("error"))
-                 .defaultBranch(Branched.as("nominal"));
+                .to(TOPIC_ENRICH_OUT, Produced.with(Serdes.String(), Serdes.String()));
 
-
-         branches.get("Branch-nominal")
-                 .filter((k, v) -> v != null)
-                 .mapValues(ProcessResult::getValue)
-                 .to(TOPIC_ENRICH_OUT, Produced.with(Serdes.String(), Serdes.String()));
-
-         branches.get("Branch-error")
-                 .processValues(ErrorProcessor::new)
-                 .to(TOPIC_DLQ, Produced.with(Serdes.String(), Serdes.String()));
 
         return builder.build();
 
     }
 
-    private static ProcessResult transformValue(Pair<String, String> pair) {
-        try {
-            return new ProcessResult(pair.getLeft() + ":::" + pair.getRight().substring(7, 10), null );
-        } catch(Exception e){
-            return new ProcessResult(pair.toString(), e);
-        }
+    private static String transformValue(Pair<String, String> pair) {
+        return pair.getLeft() + ":::" + pair.getRight().substring(7, 10);
     }
 
 

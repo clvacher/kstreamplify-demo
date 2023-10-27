@@ -13,7 +13,7 @@
     </parent>
 
     <groupId>com.bdxio.kafka</groupId>
-    <artifactId>transform-stream</artifactId>
+    <artifactId>bdxio-stream</artifactId>
     <version>1.0</version>
 
     <properties>
