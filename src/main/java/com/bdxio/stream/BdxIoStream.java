@@ -60,8 +60,6 @@ public class BdxIoStream implements ApplicationRunner {
         }
     }
 
-    private final String NOMINAL = "nominal";
-
     /**
      * build the stream topology
      *

@@ -1,8 +1,5 @@
 package com.bdxio.stream.controller;
 
-import com.bdxio.stream.BdxIoStream;
-import org.apache.kafka.streams.KafkaStreams;
-import org.springframework.boot.actuate.health.HealthComponent;
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.http.HttpStatus;
@@ -13,12 +10,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ProbeController {
 
-    private final BdxIoStream bdxioStream;
-
     private final HealthEndpoint healthEndpoint;
 
-    public ProbeController(BdxIoStream bdxioStream, HealthEndpoint healthEndpoint) {
-        this.bdxioStream = bdxioStream;
+    public ProbeController(HealthEndpoint healthEndpoint) {
         this.healthEndpoint = healthEndpoint;
     }
 
