@@ -1,4 +1,4 @@
-package com.bdxio.stream.constants;
+package com.demo.kstreamplify.constants;
 
 public class Constants {
 
