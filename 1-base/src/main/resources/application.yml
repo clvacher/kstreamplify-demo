@@ -1,9 +1,3 @@
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health
-
 kafka:
   properties:
     application.id: kstreamplify-demo-base-id
