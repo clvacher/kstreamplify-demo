@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: kstreamplify-demo-base-app
+management:
+  endpoints:
+    web:
+      exposure:
+        include: info, health
+
+kafka:
+  properties:
+#    bootstrap.servers: kafka-service:9092
+    bootstrap.servers: localhost:19092
+    application.id: kstreamplify-demo-base-id
+    default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+    default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+    auto.offset.reset: earliest
+    state.dir: /var/kstreamplify-demo-base
+    processing.guarantee: exactly_once_v2
+
+logging:
+  level:
+    ROOT: WARN
+    org.apache.kafka: INFO
+
