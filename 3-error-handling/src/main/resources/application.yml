@@ -1,6 +1,6 @@
 spring:
   application:
-    name: kstreamplify-demo-base-app
+    name: kstreamplify-demo-errorhandling-app
 management:
   endpoints:
     web:
@@ -11,11 +11,11 @@ kafka:
   properties:
 #    bootstrap.servers: kafka-service:9092
     bootstrap.servers: localhost:19092
-    application.id: kstreamplify-demo-base-id
+    application.id: kstreamplify-demo-errorhandling-id
     default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
     default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
     auto.offset.reset: earliest
-    state.dir: /var/kstreamplify-demo-base
+    state.dir: /var/kstreamplify-demo-errorhandling
     processing.guarantee: exactly_once_v2
 
 logging:
