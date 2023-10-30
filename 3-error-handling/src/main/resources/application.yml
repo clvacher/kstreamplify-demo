@@ -9,11 +9,9 @@ management:
 
 kafka:
   properties:
-#    bootstrap.servers: kafka-service:9092
     bootstrap.servers: localhost:19092
+    schema.registry.url: http://localhost:8081
     application.id: kstreamplify-demo-errorhandling-id
-    default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
-    default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
     auto.offset.reset: earliest
     state.dir: /var/kstreamplify-demo-errorhandling
     processing.guarantee: exactly_once_v2
