@@ -103,12 +103,12 @@ public class LivenessLinkStream implements ApplicationRunner {
 
     }
 
-    private static PackageModel appendAreaCode(Pair<PackageModel, String> pair) {
+    private static PackageModel appendAreaCode(Pair<PackageModel, String> joinResultPair) {
         // Extract areaCode from referential side
-        String areaCode = pair.getRight().substring(7, 10);
+        String areaCode = joinResultPair.getRight().substring(7, 10);
 
         // Extract packageModel from stream side
-        PackageModel packageModel = pair.getLeft();
+        PackageModel packageModel = joinResultPair.getLeft();
 
         // Set areaCode in packageModel
         packageModel.setAreaCode(areaCode);
