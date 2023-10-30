@@ -1,6 +1,6 @@
 spring:
   application:
-    name: transform-app
+    name: kstreamplify-demo-base-app
 management:
   endpoints:
     web:
@@ -11,11 +11,11 @@ kafka:
   properties:
 #    bootstrap.servers: kafka-service:9092
     bootstrap.servers: localhost:19092
-    application.id: bdxio-app-id
+    application.id: kstreamplify-demo-base-id
     default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
     default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
     auto.offset.reset: earliest
-    state.dir: /var/bdxio
+    state.dir: /var/kstreamplify-demo-base
     processing.guarantee: exactly_once_v2
 
 logging:

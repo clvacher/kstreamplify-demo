@@ -10,15 +10,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ProbeController {
 
-    private final LivenessLinkStream bdxioStream;
+    private final LivenessLinkStream livenessLinkStream;
 
-    public ProbeController(LivenessLinkStream bdxioStream) {
-        this.bdxioStream = bdxioStream;
+    public ProbeController(LivenessLinkStream livenessLinkStream) {
+        this.livenessLinkStream = livenessLinkStream;
     }
 
     @GetMapping("/readiness")
     public ResponseEntity<String> readinessProbe() {
-            if (bdxioStream.getStreams() != null && bdxioStream.getStreams().state()
+            if (livenessLinkStream.getStreams() != null && livenessLinkStream.getStreams().state()
                     == KafkaStreams.State.RUNNING) {
                 return ResponseEntity.status(HttpStatus.OK).body("Readiness OK");
             }
@@ -27,10 +27,10 @@ public class ProbeController {
 
     @GetMapping("/liveness")
     public ResponseEntity<String> livenessProbe() {
-        if (bdxioStream.getStreams() != null &&
-                bdxioStream.getStreams().state()
+        if (livenessLinkStream.getStreams() != null &&
+                livenessLinkStream.getStreams().state()
                 == KafkaStreams.State.RUNNING ||
-                bdxioStream.getStreams().state()
+                livenessLinkStream.getStreams().state()
                         == KafkaStreams.State.REBALANCING) {
             return ResponseEntity.status(HttpStatus.OK).body("Liveness OK");
         }

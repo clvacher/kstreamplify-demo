@@ -2,13 +2,13 @@ package com.demo.kstreamplify.constants;
 
 public class Constants {
 
-    public final static String TOPIC_DATA_IN = "bdxio.INPUT_DATA";
+    public final static String TOPIC_DATA_IN = "demo.INPUT_DATA";
 
-    public final static String TOPIC_ENRICH_OUT = "bdxio.OUTPUT_ENRICH";
+    public final static String TOPIC_ENRICH_OUT = "demo.OUTPUT_ENRICH";
 
-    public final static String TOPIC_REF = "bdxio.REFERENTIAL_DATA";
+    public final static String TOPIC_REF = "demo.REFERENTIAL_DATA";
 
-    public final static String TOPIC_DLQ = "bdxio.DLQ";
+    public final static String TOPIC_DLQ = "demo.DLQ";
 
 }
 
