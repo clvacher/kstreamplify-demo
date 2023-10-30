@@ -1,6 +1,6 @@
 package com.demo.kstreamplify;
 
-import com.demo.kstreamplify.avro.PackageModel;
+import com.demo.kstreamplify.avro.Parcel;
 import com.demo.kstreamplify.properties.KafkaProperties;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 import lombok.Getter;
@@ -72,15 +72,15 @@ public class BaseStream implements ApplicationRunner {
      */
     public Topology getTopology() {
 
-        SpecificAvroSerde<PackageModel> packageModelSpecificAvroSerde = new SpecificAvroSerde();
-        packageModelSpecificAvroSerde.configure(this.kafkaProperties.getProperties(), false);
+        SpecificAvroSerde<Parcel> ParcelSpecificAvroSerde = new SpecificAvroSerde();
+        ParcelSpecificAvroSerde.configure(this.kafkaProperties.getProperties(), false);
 
         final StreamsBuilder builder = new StreamsBuilder();
 
         // Stream the input topic
-        KStream<String, PackageModel> streamDataIn = builder.stream(
+        KStream<String, Parcel> streamDataIn = builder.stream(
                 TOPIC_DATA_IN,
-                Consumed.with(Serdes.String(),  packageModelSpecificAvroSerde)
+                Consumed.with(Serdes.String(),  ParcelSpecificAvroSerde)
         );
 
         // GlobalKTable for the referential data
@@ -94,30 +94,30 @@ public class BaseStream implements ApplicationRunner {
         // Join the stream with the referential data
         streamDataIn.join(
                         tableRefData,
-                        (leftKey, packageModel) -> packageModel.getItem(),
+                        (leftKey, Parcel) -> Parcel.getItem(),
                         Pair::of
                 )
                 // append the itemNumber to the value
-                .mapValues(BaseStream::appendAreaCode)
+                .mapValues(BaseStream::enrichWithReferential)
                 // send the result to the output topic
-                .to(TOPIC_ENRICH_OUT, Produced.with(Serdes.String(), packageModelSpecificAvroSerde));
+                .to(TOPIC_ENRICH_OUT, Produced.with(Serdes.String(), ParcelSpecificAvroSerde));
 
         return builder.build();
 
     }
 
-    private static PackageModel appendAreaCode(Pair<PackageModel, String> joinResultPair) {
+    private static Parcel enrichWithReferential(Pair<Parcel, String> joinResultPair) {
         // Extract areaCode from referential side
         String areaCode = joinResultPair.getRight().substring(7, 10);
 
-        // Extract packageModel from stream side
-        PackageModel packageModel = joinResultPair.getLeft();
+        // Extract Parcel from stream side
+        Parcel Parcel = joinResultPair.getLeft();
 
-        // Set areaCode in packageModel
-        packageModel.setAreaCode(areaCode);
+        // Set areaCode in Parcel
+        Parcel.setAreaCode(areaCode);
 
-        // Return packageModel
-        return packageModel;
+        // Return Parcel
+        return Parcel;
     }
 
 }

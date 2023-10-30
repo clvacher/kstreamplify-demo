@@ -1,14 +1,14 @@
 package com.demo.kstreamplify.model;
 
-import com.demo.kstreamplify.avro.PackageModel;
+import com.demo.kstreamplify.avro.Parcel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class PackageEnrichmentProcessingResult {
+public class ParcelEnrichmentProcessingResult {
 
-    private PackageModel value;
+    private Parcel value;
 
     private Exception exception;
 }

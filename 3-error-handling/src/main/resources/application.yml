@@ -1,17 +1,14 @@
-spring:
-  application:
-    name: kstreamplify-demo-errorhandling-app
 management:
   endpoints:
     web:
       exposure:
-        include: info, health
+        include: health
 
 kafka:
   properties:
+    application.id: kstreamplify-demo-errorhandling-id
     bootstrap.servers: localhost:19092
     schema.registry.url: http://localhost:8081
-    application.id: kstreamplify-demo-errorhandling-id
     auto.offset.reset: earliest
     state.dir: /var/kstreamplify-demo-errorhandling
     processing.guarantee: exactly_once_v2

@@ -1,0 +1,15 @@
+kafka:
+  properties:
+    application.id: kstreamplify-demo-id
+    bootstrap.servers: localhost:19092
+    schema.registry.url: http://localhost:8081
+    auto.offset.reset: earliest
+    state.dir: /var/kstreamplify-demo
+    processing.guarantee: exactly_once_v2
+    prefix:
+      self: "demo."
+
+logging:
+  level:
+    ROOT: WARN
+    org.apache.kafka: INFO
