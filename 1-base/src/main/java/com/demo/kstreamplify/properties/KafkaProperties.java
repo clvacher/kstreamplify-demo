@@ -1,4 +1,4 @@
-package com.bdxio.stream.properties;
+package com.demo.kstreamplify.properties;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,4 +1,4 @@
-package com.bdxio.stream;
+package com.demo.kstreamplify;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -7,11 +7,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *
  */
 @SpringBootApplication
-public class BdxIoStreamApplication {
+public class BaseStreamApplication {
 
 	public static void main(String[] args) {
-        SpringApplication application = new SpringApplication(BdxIoStreamApplication.class);
+        SpringApplication application = new SpringApplication(BaseStreamApplication.class);
         application.run(args);
     }
-	
 }

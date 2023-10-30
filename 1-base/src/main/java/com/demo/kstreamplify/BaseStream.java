@@ -1,5 +1,8 @@
-package com.bdxio.stream;
+package com.demo.kstreamplify;
 
+import com.demo.kstreamplify.avro.PackageModel;
+import com.demo.kstreamplify.properties.KafkaProperties;
+import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 import lombok.Getter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kafka.common.serialization.Serdes;
@@ -7,31 +10,33 @@ import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.GlobalKTable;
+import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.Materialized;
+import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
-import com.bdxio.stream.properties.KafkaProperties;
 
-import java.util.Map;
-
-import static com.bdxio.stream.constants.Constants.*;
+import static com.demo.kstreamplify.constants.Constants.TOPIC_DATA_IN;
+import static com.demo.kstreamplify.constants.Constants.TOPIC_ENRICH_OUT;
+import static com.demo.kstreamplify.constants.Constants.TOPIC_REF;
 
 @Component
 @Getter
-public class BdxIoStream implements ApplicationRunner {
+public class BaseStream implements ApplicationRunner {
 
-    private static final Logger logger = LoggerFactory.getLogger(BdxIoStream.class);
+    private static final Logger logger = LoggerFactory.getLogger(BaseStream.class);
 
     private final KafkaProperties kafkaProperties;
 
     private KafkaStreams streams;
 
-
-    public BdxIoStream(KafkaProperties kafkaProperties) {
+    public BaseStream(KafkaProperties kafkaProperties) {
         this.kafkaProperties = kafkaProperties;
     }
 
@@ -68,11 +73,13 @@ public class BdxIoStream implements ApplicationRunner {
     public Topology getTopology() {
         final StreamsBuilder builder = new StreamsBuilder();
 
-        KStream<String, String> streamDataIn = builder.stream(
+        // Stream the input topic
+        KStream<String, PackageModel> streamDataIn = builder.stream(
                 TOPIC_DATA_IN,
-                Consumed.with(Serdes.String(), Serdes.String())
+                Consumed.with(Serdes.String(), new SpecificAvroSerde<PackageModel>())
         );
 
+        // GlobalKTable for the referential data
         GlobalKTable<String, String> tableRefData = builder.globalTable(
                 TOPIC_REF,
                 Consumed.with(Serdes.String(), Serdes.String()),
@@ -80,24 +87,34 @@ public class BdxIoStream implements ApplicationRunner {
                         .withKeySerde(Serdes.String()).withValueSerde(Serdes.String())
         );
 
+        // Join the stream with the referential data
         streamDataIn.join(
                         tableRefData,
-                        (leftKey, leftValue) -> leftKey,
+                        (leftKey, packageModel) -> packageModel.getItem(),
                         Pair::of
                 )
-                .mapValues(pair ->
-                        transformValue(pair)
-                )
-
-                .to(TOPIC_ENRICH_OUT, Produced.with(Serdes.String(), Serdes.String()));
+                // append the itemNumber to the value
+                .mapValues(BaseStream::appendAreaCode)
+                // send the result to the output topic
+                .to(TOPIC_ENRICH_OUT, Produced.with(Serdes.String(), new SpecificAvroSerde<PackageModel>()));
 
 
         return builder.build();
 
     }
 
-    private static String transformValue(Pair<String, String> pair) {
-        return pair.getLeft() + ":::" + pair.getRight().substring(7, 10);
+    private static PackageModel appendAreaCode(Pair<PackageModel, String> pair) {
+        // Extract areaCode from referential side
+        String areaCode = pair.getRight().substring(7, 10);
+
+        // Extract packageModel from stream side
+        PackageModel packageModel = pair.getLeft();
+
+        // Set areaCode in packageModel
+        packageModel.setAreaCode(areaCode);
+
+        // Return packageModel
+        return packageModel;
     }
 
 }

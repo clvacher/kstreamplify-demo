@@ -1,20 +1,18 @@
-package com.bdxio.stream.controller;
+package com.demo.kstreamplify.controller;
 
+import com.demo.kstreamplify.BaseStream;
 import org.apache.kafka.streams.KafkaStreams;
-import org.springframework.boot.actuate.health.HealthEndpoint;
-import org.springframework.boot.actuate.health.Status;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.bdxio.stream.BdxIoStream;
 
 @RestController
 public class ProbeController {
 
-    private final BdxIoStream bdxioStream;
+    private final BaseStream bdxioStream;
 
-    public ProbeController(BdxIoStream bdxioStream) {
+    public ProbeController(BaseStream bdxioStream) {
         this.bdxioStream = bdxioStream;
     }
 
