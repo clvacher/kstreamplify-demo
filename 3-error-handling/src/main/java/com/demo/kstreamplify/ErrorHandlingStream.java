@@ -1,6 +1,8 @@
 package com.demo.kstreamplify;
 
 import com.demo.kstreamplify.avro.PackageModel;
+import com.demo.kstreamplify.model.PackageEnrichmentProcessingResult;
+import com.demo.kstreamplify.processor.ErrorProcessor;
 import com.demo.kstreamplify.properties.KafkaProperties;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 import lombok.Getter;
@@ -10,10 +12,12 @@ import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
+import org.apache.kafka.streams.kstream.Branched;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.GlobalKTable;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Materialized;
+import org.apache.kafka.streams.kstream.Named;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.state.KeyValueStore;
 import org.slf4j.Logger;
@@ -22,21 +26,24 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
 import static com.demo.kstreamplify.constants.Constants.TOPIC_DATA_IN;
+import static com.demo.kstreamplify.constants.Constants.TOPIC_DLQ;
 import static com.demo.kstreamplify.constants.Constants.TOPIC_ENRICH_OUT;
 import static com.demo.kstreamplify.constants.Constants.TOPIC_REF;
 
 @Component
 @Getter
-public class BaseStream implements ApplicationRunner {
+public class ErrorHandlingStream implements ApplicationRunner {
 
-    private static final Logger logger = LoggerFactory.getLogger(BaseStream.class);
+    private static final Logger logger = LoggerFactory.getLogger(ErrorHandlingStream.class);
 
     private final KafkaProperties kafkaProperties;
 
     private KafkaStreams streams;
 
-    public BaseStream(KafkaProperties kafkaProperties) {
+    public ErrorHandlingStream(KafkaProperties kafkaProperties) {
         this.kafkaProperties = kafkaProperties;
     }
 
@@ -71,16 +78,12 @@ public class BaseStream implements ApplicationRunner {
      * @return
      */
     public Topology getTopology() {
-
-        SpecificAvroSerde<PackageModel> packageModelSpecificAvroSerde = new SpecificAvroSerde();
-        packageModelSpecificAvroSerde.configure(this.kafkaProperties.getProperties(), false);
-
         final StreamsBuilder builder = new StreamsBuilder();
 
         // Stream the input topic
         KStream<String, PackageModel> streamDataIn = builder.stream(
                 TOPIC_DATA_IN,
-                Consumed.with(Serdes.String(),  packageModelSpecificAvroSerde)
+                Consumed.with(Serdes.String(), new SpecificAvroSerde<PackageModel>())
         );
 
         // GlobalKTable for the referential data
@@ -92,32 +95,50 @@ public class BaseStream implements ApplicationRunner {
         );
 
         // Join the stream with the referential data
-        streamDataIn.join(
+        var processingResultStream = streamDataIn.join(
                         tableRefData,
                         (leftKey, packageModel) -> packageModel.getItem(),
                         Pair::of
                 )
                 // append the itemNumber to the value
-                .mapValues(BaseStream::appendAreaCode)
-                // send the result to the output topic
-                .to(TOPIC_ENRICH_OUT, Produced.with(Serdes.String(), packageModelSpecificAvroSerde));
+                .mapValues(ErrorHandlingStream::appendAreaCode);
+
+        // Split the stream into two branches : nominal and error
+        Map<String, KStream<String, PackageEnrichmentProcessingResult>> branches = processingResultStream
+                .split(Named.as("Branch-"))
+                .branch((key, packageEnrichmentProcessingResult) -> packageEnrichmentProcessingResult.getException() != null, Branched.as("error"))
+                .defaultBranch(Branched.as("nominal"));
+
+
+        // Extract successful results and send to the output topic
+        branches.get("Branch-nominal")
+                .mapValues(PackageEnrichmentProcessingResult::getValue)
+                .to(TOPIC_ENRICH_OUT, Produced.with(Serdes.String(), new SpecificAvroSerde<PackageModel>()));
+
+        // Extract failed results. format them and send to the DLQ topic
+        branches.get("Branch-error")
+                .processValues(ErrorProcessor::new)
+                .to(TOPIC_DLQ, Produced.with(Serdes.String(), Serdes.String()));
 
         return builder.build();
-
     }
 
-    private static PackageModel appendAreaCode(Pair<PackageModel, String> joinResultPair) {
-        // Extract areaCode from referential side
-        String areaCode = joinResultPair.getRight().substring(7, 10);
+    private static PackageEnrichmentProcessingResult appendAreaCode(Pair<PackageModel, String> joinResultPair) {
+        try {
+            // Extract areaCode from referential side
+            String areaCode = joinResultPair.getRight().substring(7, 10);
 
-        // Extract packageModel from stream side
-        PackageModel packageModel = joinResultPair.getLeft();
+            // Extract packageModel from stream side
+            PackageModel packageModel = joinResultPair.getLeft();
 
-        // Set areaCode in packageModel
-        packageModel.setAreaCode(areaCode);
+            // Set areaCode in packageModel
+            packageModel.setAreaCode(areaCode);
 
-        // Return packageModel
-        return packageModel;
+            // Return packageModel
+            return new PackageEnrichmentProcessingResult(packageModel, null);
+        } catch (Exception e){
+            return new PackageEnrichmentProcessingResult(joinResultPair.getLeft(), e);
+        }
     }
 
 }
