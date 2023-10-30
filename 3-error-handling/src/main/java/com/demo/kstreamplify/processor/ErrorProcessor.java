@@ -1,6 +1,6 @@
 package com.demo.kstreamplify.processor;
 
-import com.demo.kstreamplify.model.PackageEnrichmentProcessingResult;
+import com.demo.kstreamplify.model.ParcelEnrichmentProcessingResult;
 import org.apache.kafka.streams.processor.api.FixedKeyProcessor;
 import org.apache.kafka.streams.processor.api.FixedKeyProcessorContext;
 import org.apache.kafka.streams.processor.api.FixedKeyRecord;
@@ -10,7 +10,7 @@ import org.apache.kafka.streams.processor.api.RecordMetadata;
 /**
  * Generic error processor.
  */
-public class ErrorProcessor implements FixedKeyProcessor<String, PackageEnrichmentProcessingResult, String> {
+public class ErrorProcessor implements FixedKeyProcessor<String, ParcelEnrichmentProcessingResult, String> {
     private FixedKeyProcessorContext<String, String> context;
 
     /**
@@ -30,7 +30,7 @@ public class ErrorProcessor implements FixedKeyProcessor<String, PackageEnrichme
      * @param fixedKeyRecord the record to process an error
      */
     @Override
-    public void process(FixedKeyRecord<String, PackageEnrichmentProcessingResult> fixedKeyRecord) {
+    public void process(FixedKeyRecord<String, ParcelEnrichmentProcessingResult> fixedKeyRecord) {
 
         RecordMetadata recordMetadata = context.recordMetadata().get();
 

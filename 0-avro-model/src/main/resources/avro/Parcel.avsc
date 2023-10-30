@@ -1,6 +1,6 @@
 {
   "namespace": "com.demo.kstreamplify.avro",
-  "name": "PackageModel",
+  "name": "Parcel",
   "type": "record",
   "fields": [
     { "name": "id", "type": "string" },

@@ -13,4 +13,30 @@
     </parent>
 
     <artifactId>kstreamplify-stream</artifactId>
+
+
+    <dependencies>
+        <dependency>
+            <groupId>com.demo.kstreamplify</groupId>
+            <artifactId>avro-model</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.michelin</groupId>
+            <artifactId>kstreamplify-spring-boot</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.demo.kstreamplify.KstreamplifyStreamApplication</mainClass>
+                    <layout>JAR</layout>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

@@ -1,23 +1,19 @@
-spring:
-  application:
-    name: kstreamplify-demo-livenesslink-app
 management:
   endpoints:
     web:
       exposure:
-        include: info, health
+        include: health
 
 kafka:
   properties:
+    application.id: kstreamplify-demo-base-id
     bootstrap.servers: localhost:19092
     schema.registry.url: http://localhost:8081
-    application.id: kstreamplify-demo-base-id
     auto.offset.reset: earliest
-    state.dir: /var/kstreamplify-demo-livenesslink
+    state.dir: /var/kstreamplify-demo-base
     processing.guarantee: exactly_once_v2
 
 logging:
   level:
     ROOT: WARN
     org.apache.kafka: INFO
-

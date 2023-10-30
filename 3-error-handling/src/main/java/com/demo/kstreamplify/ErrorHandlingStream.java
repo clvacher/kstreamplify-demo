@@ -1,7 +1,7 @@
 package com.demo.kstreamplify;
 
-import com.demo.kstreamplify.avro.PackageModel;
-import com.demo.kstreamplify.model.PackageEnrichmentProcessingResult;
+import com.demo.kstreamplify.avro.Parcel;
+import com.demo.kstreamplify.model.ParcelEnrichmentProcessingResult;
 import com.demo.kstreamplify.processor.ErrorProcessor;
 import com.demo.kstreamplify.properties.KafkaProperties;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
@@ -79,15 +79,15 @@ public class ErrorHandlingStream implements ApplicationRunner {
      */
     public Topology getTopology() {
 
-        SpecificAvroSerde<PackageModel> packageModelSpecificAvroSerde = new SpecificAvroSerde();
-        packageModelSpecificAvroSerde.configure(this.kafkaProperties.getProperties(), false);
+        SpecificAvroSerde<Parcel> ParcelSpecificAvroSerde = new SpecificAvroSerde();
+        ParcelSpecificAvroSerde.configure(this.kafkaProperties.getProperties(), false);
 
         final StreamsBuilder builder = new StreamsBuilder();
 
         // Stream the input topic
-        KStream<String, PackageModel> streamDataIn = builder.stream(
+        KStream<String, Parcel> streamDataIn = builder.stream(
                 TOPIC_DATA_IN,
-                Consumed.with(Serdes.String(), packageModelSpecificAvroSerde)
+                Consumed.with(Serdes.String(), ParcelSpecificAvroSerde)
         );
 
         // GlobalKTable for the referential data
@@ -101,23 +101,23 @@ public class ErrorHandlingStream implements ApplicationRunner {
         // Join the stream with the referential data
         var processingResultStream = streamDataIn.join(
                         tableRefData,
-                        (leftKey, packageModel) -> packageModel.getItem(),
+                        (leftKey, Parcel) -> Parcel.getItem(),
                         Pair::of
                 )
                 // append the itemNumber to the value
-                .mapValues(ErrorHandlingStream::appendAreaCode);
+                .mapValues(ErrorHandlingStream::enrichWithReferential);
 
         // Split the stream into two branches : nominal and error
-        Map<String, KStream<String, PackageEnrichmentProcessingResult>> branches = processingResultStream
+        Map<String, KStream<String, ParcelEnrichmentProcessingResult>> branches = processingResultStream
                 .split(Named.as("Branch-"))
-                .branch((key, packageEnrichmentProcessingResult) -> packageEnrichmentProcessingResult.getException() != null, Branched.as("error"))
+                .branch((key, parcelEnrichmentProcessingResult) -> parcelEnrichmentProcessingResult.getException() != null, Branched.as("error"))
                 .defaultBranch(Branched.as("nominal"));
 
 
         // Extract successful results and send to the output topic
         branches.get("Branch-nominal")
-                .mapValues(PackageEnrichmentProcessingResult::getValue)
-                .to(TOPIC_ENRICH_OUT, Produced.with(Serdes.String(), packageModelSpecificAvroSerde));
+                .mapValues(ParcelEnrichmentProcessingResult::getValue)
+                .to(TOPIC_ENRICH_OUT, Produced.with(Serdes.String(), ParcelSpecificAvroSerde));
 
         // Extract failed results. format them and send to the DLQ topic
         branches.get("Branch-error")
@@ -127,21 +127,21 @@ public class ErrorHandlingStream implements ApplicationRunner {
         return builder.build();
     }
 
-    private static PackageEnrichmentProcessingResult appendAreaCode(Pair<PackageModel, String> joinResultPair) {
+    private static ParcelEnrichmentProcessingResult enrichWithReferential(Pair<Parcel, String> joinResultPair) {
         try {
             // Extract areaCode from referential side
             String areaCode = joinResultPair.getRight().substring(7, 10);
 
-            // Extract packageModel from stream side
-            PackageModel packageModel = joinResultPair.getLeft();
+            // Extract Parcel from stream side
+            Parcel Parcel = joinResultPair.getLeft();
 
-            // Set areaCode in packageModel
-            packageModel.setAreaCode(areaCode);
+            // Set areaCode in Parcel
+            Parcel.setAreaCode(areaCode);
 
-            // Return packageModel
-            return new PackageEnrichmentProcessingResult(packageModel, null);
+            // Return Parcel
+            return new ParcelEnrichmentProcessingResult(Parcel, null);
         } catch (Exception e){
-            return new PackageEnrichmentProcessingResult(joinResultPair.getLeft(), e);
+            return new ParcelEnrichmentProcessingResult(joinResultPair.getLeft(), e);
         }
     }
 
