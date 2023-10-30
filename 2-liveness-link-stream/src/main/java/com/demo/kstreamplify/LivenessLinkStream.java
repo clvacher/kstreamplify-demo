@@ -71,12 +71,16 @@ public class LivenessLinkStream implements ApplicationRunner {
      * @return
      */
     public Topology getTopology() {
+
+        SpecificAvroSerde<PackageModel> packageModelSpecificAvroSerde = new SpecificAvroSerde();
+        packageModelSpecificAvroSerde.configure(this.kafkaProperties.getProperties(), false);
+
         final StreamsBuilder builder = new StreamsBuilder();
 
         // Stream the input topic
         KStream<String, PackageModel> streamDataIn = builder.stream(
                 TOPIC_DATA_IN,
-                Consumed.with(Serdes.String(), new SpecificAvroSerde<PackageModel>())
+                Consumed.with(Serdes.String(), packageModelSpecificAvroSerde)
         );
 
         // GlobalKTable for the referential data
@@ -96,7 +100,7 @@ public class LivenessLinkStream implements ApplicationRunner {
                 // append the itemNumber to the value
                 .mapValues(LivenessLinkStream::appendAreaCode)
                 // send the result to the output topic
-                .to(TOPIC_ENRICH_OUT, Produced.with(Serdes.String(), new SpecificAvroSerde<PackageModel>()));
+                .to(TOPIC_ENRICH_OUT, Produced.with(Serdes.String(), packageModelSpecificAvroSerde));
 
 
         return builder.build();
