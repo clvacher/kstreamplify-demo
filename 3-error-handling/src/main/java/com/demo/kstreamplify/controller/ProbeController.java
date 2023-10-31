@@ -16,7 +16,7 @@ public class ProbeController {
         this.errorHandlingStream = errorHandlingStream;
     }
 
-    @GetMapping("/readiness")
+    @GetMapping("/ready")
     public ResponseEntity<String> readinessProbe() {
             if (errorHandlingStream.getStreams() != null && errorHandlingStream.getStreams().state()
                     == KafkaStreams.State.RUNNING) {

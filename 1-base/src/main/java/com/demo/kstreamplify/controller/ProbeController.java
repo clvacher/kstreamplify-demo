@@ -18,7 +18,7 @@ public class ProbeController {
         this.healthEndpoint = healthEndpoint;
     }
 
-    @GetMapping("/readiness")
+    @GetMapping("/ready")
     public ResponseEntity<String> readinessProbe() {
         if (Status.UP.equals(healthEndpoint.health().getStatus())) {
             return ResponseEntity.status(HttpStatus.OK).body("Readiness OK");

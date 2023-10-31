@@ -16,7 +16,7 @@ public class ProbeController {
         this.livenessLinkStream = livenessLinkStream;
     }
 
-    @GetMapping("/readiness")
+    @GetMapping("/ready")
     public ResponseEntity<String> readinessProbe() {
             if (livenessLinkStream.getStreams() != null && livenessLinkStream.getStreams().state()
                     == KafkaStreams.State.RUNNING) {
