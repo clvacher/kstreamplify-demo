@@ -72,15 +72,15 @@ public class BaseStream implements ApplicationRunner {
      */
     public Topology getTopology() {
 
-        SpecificAvroSerde<Parcel> ParcelSpecificAvroSerde = new SpecificAvroSerde();
-        ParcelSpecificAvroSerde.configure(this.kafkaProperties.getProperties(), false);
+        SpecificAvroSerde<Parcel> parcelSpecificAvroSerde = new SpecificAvroSerde<>();
+        parcelSpecificAvroSerde.configure(this.kafkaProperties.getProperties(), false);
 
         final StreamsBuilder builder = new StreamsBuilder();
 
         // Stream the input topic
         KStream<String, Parcel> streamDataIn = builder.stream(
                 TOPIC_DATA_IN,
-                Consumed.with(Serdes.String(),  ParcelSpecificAvroSerde)
+                Consumed.with(Serdes.String(),  parcelSpecificAvroSerde)
         );
 
         // GlobalKTable for the referential data
@@ -100,7 +100,7 @@ public class BaseStream implements ApplicationRunner {
                 // append the itemNumber to the value
                 .mapValues(BaseStream::enrichWithReferential)
                 // send the result to the output topic
-                .to(TOPIC_ENRICH_OUT, Produced.with(Serdes.String(), ParcelSpecificAvroSerde));
+                .to(TOPIC_ENRICH_OUT, Produced.with(Serdes.String(), parcelSpecificAvroSerde));
 
         return builder.build();
 
@@ -111,13 +111,13 @@ public class BaseStream implements ApplicationRunner {
         String areaCode = joinResultPair.getRight().substring(7, 10);
 
         // Extract Parcel from stream side
-        Parcel Parcel = joinResultPair.getLeft();
+        Parcel parcel = joinResultPair.getLeft();
 
         // Set areaCode in Parcel
-        Parcel.setAreaCode(areaCode);
+        parcel.setAreaCode(areaCode);
 
         // Return Parcel
-        return Parcel;
+        return parcel;
     }
 
 }

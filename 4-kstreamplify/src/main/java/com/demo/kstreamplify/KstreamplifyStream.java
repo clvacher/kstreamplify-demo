@@ -41,13 +41,13 @@ public class KstreamplifyStream extends KafkaStreamsStarter {
     private ProcessingResult<Parcel, Parcel> enrichWithReferential(Pair<Parcel,String> packageAndReferential){
         try{
             // Extract the Parcel from stream side
-            var Parcel = packageAndReferential.getLeft();
+            var parcel = packageAndReferential.getLeft();
 
             // Extract the areaCode from referential side and put it in the Parcel
-            Parcel.setAreaCode(packageAndReferential.getRight().substring(7,10));
+            parcel.setAreaCode(packageAndReferential.getRight().substring(7,10));
 
             // Return the successful record
-            return ProcessingResult.success(Parcel);
+            return ProcessingResult.success(parcel);
         }
         catch(Exception e){
             // Return the failed record
